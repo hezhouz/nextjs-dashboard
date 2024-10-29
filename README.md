@@ -41,3 +41,6 @@ export default function Page() {
 ```
 
 2. **创建页面**  Next.js 使用文件系统路由，其中​​文件夹用于创建嵌套路由。每个文件夹代表一个映射到 URL 段的路由段。
+
+
+

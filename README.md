@@ -9,6 +9,11 @@ Next.js 是一个 React框架，它为您提供创建 Web 应用程序的构建�
 -public 包含应用程序的所有静态资产，例如图像。
 -next.config.js 
 ```
+
+## 使用到的轮子插件
+依赖包 [limiter](https://www.npmjs.com/package/limiter)  为了防止被恶意调用，限制每分钟最多调用次数。
+
+
 ## 一、开发
 ### 1. **CSS** 页面 CSS 使用 [tailwind](https://tailwindcss.com/) 直接背好累名就行了，不用写一大摞css文件
 ### 2. **图片**  图片资源是放在 /public 里面，一般正常使用DOM的 img 自带的组件，在next中提供了一个图片组件
@@ -50,6 +55,71 @@ export default function Page() {
 ![app router](</images/截屏2024-10-31 10.59.12.png>)
 
  - template 模板类似于布局（layout），它也会传入每个子布局或者页面。但不会像布局那样维持状态。
+
+### 4. **服务端组件和客户端组件的使用**
+  **在nextjs中，组件默认使用的是服务端组件**   **请求在服务端执行，并将渲染后的HTML页面返回给客户端。**
+  -  优势
+
+    1. 获取数据更快：因为服务器离数据储存的服务器很近，以及性能、网络都比较流畅。
+    2. 安全：敏感信息和逻辑都存在服务端。
+    3. 缓存：服务端渲染结果可以缓存，在后续请求中反复使用。
+    4. 依赖包体积小：服务端的组件代码不会打包到 bundle 中。
+    5. 首屏页面渲染速度：服务端渲染生成 HTML，快速展示 UI。
+    6. Streaming（分流渲染）：服务端组件可以将渲染工作拆分为 chunks（块），并在准备就绪时将它们流式传输到客户端。用户可以更早看到页面的部分内容，而不必等待整个页面渲染完毕。
+
+
+  - 缺点
+
+    1. 在服务端组件不能使用 useState 状态管理。
+    2. 不能使用浏览器的 API 如：location 等。
+
+  - 接下来看下如何使用
+
+   一般情况都是服务端组件和客户端组件交替使用
+
+```text
+注意事项写在前面
+⚠️注意： 服务端组件可以直接导入客户端组件，但客户端组件并不能导入服务端组件
+
+⚠️注意： "use client"用于声明服务端和客户端组件模块之间的边界。
+        当你在文件中定义了一个 "use client"，导入的其他模块包括子组件，都会被视为客户端 bundle 的一部分。
+```
+
+```js
+'use client' // 设置组件为客户端组件在该文件第一行写上 ‘use client’
+
+import ServerComponent from './Server-Component'// 在客户端倒入服务端组件 这是万万不可以的。原因看开头注意事项
+export default function ClientComponent({ children }) {
+  const [count, setCount] = useState(0)
+  return (
+    <>
+      <button onClick={() => setCount(count + 1)}>{count}</button>
+      <ServerComponent />
+    </>
+  )
+}
+
+```
+
+### 5. 数据获取 Server Actions
+
+Server Action 是指在服务端执行的异步函数，他们可以在服务端和客户端组件使用，用来处理 Next.js 中的数据提交和更改。
+
+
+基本用法
+---
+定义一个 Server Action 需要使用 **use server** 指令。按定义位置分为两种用法：
+1. 将**use server**放到一个 async 函数顶部表示改函数为 Server Action
+2. 将**use server**放到一个文件顶部表示改函数导出的所有函数都是 Server Action
+
+使用场景
+---
+
+想定一个场景，实现一个简单的 todolist， 然后在逐步加上提交表单时的等待状态、服务端如何验证字段、如何进行更好的更新、如何进行错误处理、如何获取 header And cookies 的数据、如何重定向？
+
+
+
+
 
 
 

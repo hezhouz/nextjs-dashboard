@@ -1,13 +1,11 @@
-import { findToDos, createToDo } from './actions';
+import { findToDos } from './actions';
+import AddToDoForm from './form';
 
 export default async function Page() {
   const todos = await findToDos();
   return (
     <>
-      <form action={createToDo}>
-        <input type="text" name="todo" />
-        <button type="submit">Submit</button>
-      </form>
+      <AddToDoForm />
       <ul>
         {todos.map((todo, i) => <li key={i}>{todo}</li>)}
       </ul>

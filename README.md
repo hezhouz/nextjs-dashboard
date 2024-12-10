@@ -119,6 +119,72 @@ Server Action 是指在服务端执行的异步函数，他们可以在服务端
 
 
 
+### 6. 懒加载
+  在 next.js 中有了两种方法实现懒加载
+  - 使用 React.lazy() 和 suspanse 
+  - 使用 next/dynamic 实现动态导入
+
+React.lazy 和 suspanse 的用法
+---
+```js
+import { Suspanse, lazy } from 'react'
+const components = lazy(() => import('./components.tsx'))
+
+export default function page() {
+  return(
+    <Suspanse fullback={<Lodding />}>
+      <h1>Preview</h1>
+      <components />
+    </Suspanse>
+  )
+}
+```
+上面👆是 React 中的用法，下面咱们来介绍一下在 next.js 中的实际用法
+
+next/dynamic 的基本用法
+-----
+```js
+import dynamic from 'next/dynamic'
+
+const Compontents = dynamic(
+  () => import('./compontents.tsx'), // 第一个参数表示加载函数，用法同lazy函数
+  {
+    loading: () => <p>Loading...</p> // 第二个参数表示配置项，可以设置加载组件， 如同suspanse中的fullback
+  }
+)
+/** 注意事项
+ * 1. import 中的路径不能有模版字符串或者变量
+ * 2. import 必须在dynamic 内部
+ * 3. dynamic 跟 lazy 函数一样，需要放在模块顶部
+*/
+export default function page() {
+  return(
+    <div>
+      <Compontents />
+    </div>
+  )
+}
+```
+⚠️懒加载只适用于客户端组件，如果导入一个服务端组件那么只会懒加载组件中的客户端组件，服务端组件本身是不会懒加载的
+
+
+
+### 我去复习一下 TS 好久没用忘的差不多了😂 2024-12-10
+
+
+
+
+
+
+
+## 二、新概念
+
+
+
+### 1. Edge Runtime & Node.js Runtime 概念
+
+让我们先从 CDN 说起，内容分发网络（Content Delivery Network）他是由分布在不同地理位置的服务器及数据中心的虚拟网络，目的在于以最小的网络延迟将内容分发给用户。现在需要它干一点除了缓存和传输网络内容的事情， 就是 **边缘网络** (edge Network)
+让它干什么呢？ 目的是为了用户更快的能看到页面，就是让它帮忙大哥做一点计算的活，它的环境特殊只能使用[web APIs ](https://nextjs.org/docs/app/api-reference/edge).
 
 
 

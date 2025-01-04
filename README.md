@@ -169,10 +169,153 @@ export default function page() {
 
 
 
-### 我去复习一下 TS 好久没用忘的差不多了😂 2024-12-10
+### 复习一下 TS 好久没用忘的差不多了😂 2024-12-10
+
+大白话解释TS的作用： **就是静态类型检查，在编写代码的时候就能避免一些简单的类型错误bug。 在打包或者编译的时候编译器会去掉TS的注解并将代码转换为js，因为没有任何浏览器或者运行环境可以直接运行TS，所以这就是为什么TS需要一个编译器**
 
 
+#### 常见的几种类型 
+  - string  number boolean  原始的类型 很EZ
+  - Array（数组） 如 [1,2,3] 可以这样弄 Array<number> / number[]，如 ['a','b','c'] Array<string> 复杂的后面说
+  - Function（函数）传递的参数需要类型注解 
+  - Object（对象） 
+  ```ts
+    // 常用的方法 类型别名
+    type Point = {
+      x: number;
+      y: number;
+    };
+    // 或者 接口声明 interfaces 
+    //interface Point {
+    //  x: number;
+    //  y: number;
+    //}
+    // Exactly the same as the earlier example
+    function printCoord(pt: Point) {
+      console.log("The coordinate's x value is " + pt.x);
+      console.log("The coordinate's y value is " + pt.y);
+    }
+    // interfaces 和 type 两者最关键的差别在于类型别名本身无法添加新的属性，而接口是可以扩展的。
+  ```
+  - 类型收窄案例分析
+  需求:如果 padLeft 参数 padding 是一个数字，我们就在 input 前面添加同等数量的空格，而如果 padding 是一个字符串，我们就直接添加到 input 前面。
+  ```ts
+  function padLeft(padding: number | string, input: string) {
+    if (typeof padding === "number") { // 如果不加这句类型判断，ts会把 padding + 1 这段标红，他在警告我们 直接这么相加并不会得到我们想要的结果，
+      return new Array(padding + 1).join(" ") + input;
+    }
+    return padding + input;
+  }
+  ```
+  - 类型判形式的示例
+  ```ts
+    function isFish(pet: Fish | Bird): pet is Fish {//  pet is Fish 用来告诉 ts：如果函数返回 true，参数 pet 的类型就是 Fish。
+      return (pet as Fish).swim !== undefined;
+    }
+  ``` 
+  - 类型辨别联合
+  ```ts
+    interface StartAction {
+      type: "start";
+      payload: { user: string };
+    }
+    interface StopAction {
+      type: "stop";
+    }
+    interface ResetAction {
+      type: "reset";
+      payload: { reason: string };
+    }
+    type Action = StartAction | StopAction | ResetAction;
 
+    // 通过检查可辨别字段，TypeScript 自动缩小类型范围，避免不必要的类型断言。
+    function handleAction(action: Action) {
+      switch (action.type) {
+        case "start":
+          console.log(`Starting for user: ${action.payload.user}`);
+          break;
+
+        case "stop":
+          console.log("Stopping");
+          break;
+
+        case "reset":
+          console.log(`Reset because: ${action.payload.reason}`);
+          break;
+
+        default:
+          throw new Error("Unknown action type");
+      }
+    }
+
+  ```
+#### 函数类型
+  最常用和最让人头疼的就是函数类型的编写，得牢记于心
+
+  - 简单的函数类型表达式 function xxxx(fn: (a: string) => void) {...}
+  - 泛型函数
+  ```ts
+  // <Type> ： 表示一个泛型参数的占位符,它的作用是让函数支持不同类型 
+  // Type[] ：表示元素类型为 Type 的数组
+  // Type | undefined ： 表示函数返回 Tpye 类型或者 undefined 类型
+  function firstElement<Type>(arr: Type[]): Type | undefined {
+    return arr[0];
+  }
+
+  const nums = [1, 2, 3];
+  const firstNum = firstElement(nums); // 推断为 number | undefined
+  console.log(firstNum); // 输出: 1
+
+  const words = ["apple", "banana"];
+  const firstWord = firstElement(words); // 推断为 string | undefined
+  console.log(firstWord); // 输出: "apple"
+
+  const emptyList: boolean[] = [];
+  const firstEmpty = firstElement(emptyList); // 推断为 boolean | undefined
+  console.log(firstEmpty); // 输出: undefined
+
+  const obj= [{a:1, b:2}, {c:3, b: 4}];
+  const firstEmpty = firstElement(obj); // 推断为 Object | undefined
+  console.log(firstEmpty); // 输出: {a:1, b:2}
+  ```
+  - 泛型约束函数 这也是很常用的
+
+  约束有几点需要注意
+
+    1. 如果可能的话，直接使用类型参数而不是约束它。
+    2. 尽可能用更少的类型参数
+    3. 如果一个类型参数仅仅出现在一个地方，强烈建议你重新考虑是否真的需要它
+    4. 当你写一个回调函数的类型时,不要写一个可选参数, 除非你真的打算调用函数的时候不传入实参
+    5. 尽可能的使用联合类型替代重载
+    6. void 跟 undefined 不一样
+    7. object 不同于 Object ，总是用 object! // 解释： 函数就是对象
+
+示例
+
+  ```ts
+    //<T, K extends keyof T> 是泛型参数的声明
+    // T 表示对象的类型。
+    // K 是一个泛型 它必须是 T 的键之一  （通过 keyof T 约束）
+    // (obj: T, key: K) 参数 一个是对象、一个是对象中的key
+    // T[K] 表示对象 T 中键 K 对应的属性的类型。
+    function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+      return obj[key];
+    }
+    const person = {
+      name: "Alice",
+      age: 30,
+      job: "Engineer",
+    };
+    // 函数调用：获取 name 属性
+    const personName = getProperty(person, "name"); // 推断类型为 string
+    console.log(personName); // 输出: Alice
+    // 函数调用：获取 age 属性
+    const personAge = getProperty(person, "age"); // 推断类型为 number
+    console.log(personAge); // 输出: 30
+  ```
+  - 泛型对象
+
+  
 
 
 
